@@ -20,6 +20,7 @@ namespace freenect2_camera
 
 Freenect2Camera::Freenect2Camera()
  : m_device(0)
+ , m_initialized(false)
 {
 }
 
@@ -47,6 +48,10 @@ void Freenect2Camera::onInit()
 		throw std::runtime_error("Could not open device");
 	}
 
+	m_device->setColorFrameListener(this);
+	m_device->setIrAndDepthFrameListener(this);
+	m_device->start();
+
 	NODELET_INFO("Connected to Kinect2 device: %s, fw version: %s",
 		m_device->getSerialNumber().c_str(),
 		m_device->getFirmwareVersion().c_str()
@@ -57,9 +62,7 @@ void Freenect2Camera::onInit()
 	setupColor();
 	setupDepth();
 
-	m_device->setColorFrameListener(this);
-	m_device->setIrAndDepthFrameListener(this);
-	m_device->start();
+	m_initialized = true;
 }
 
 void Freenect2Camera::setupColor()
@@ -195,6 +198,12 @@ void Freenect2Camera::setupDepth()
 
 bool Freenect2Camera::onNewFrame(libfreenect2::Frame::Type type, libfreenect2::Frame* frame)
 {
+	if(!m_initialized)
+	{
+		delete frame;
+		return true;
+	}
+
 	switch(type)
 	{
 		case libfreenect2::Frame::Color:

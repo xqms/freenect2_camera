@@ -46,6 +46,8 @@ private:
 	libfreenect2::Freenect2Device* m_device;
 
 	std::string m_deviceName;
+
+	bool m_initialized;
 };
 
 }
