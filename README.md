@@ -8,7 +8,7 @@ Status
 ------
 
 Publishes RGB and depth images at 15 and 30 Hz respectively. The depth images
-are in mm as a floating point value.
+are in m as a floating point value.
 
 Building
 --------

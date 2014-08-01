@@ -241,7 +241,15 @@ bool Freenect2Camera::onNewFrame(libfreenect2::Frame::Type type, libfreenect2::F
 
 			// FIXME: Is this possible without copying?
 			img->data.resize(img->step * img->height);
-			memcpy(img->data.data(), frame->data, img->data.size());
+			const float* src = reinterpret_cast<const float*>(frame->data);
+			float* dataptr = reinterpret_cast<float*>(img->data.data());
+
+			// Convert mm to m
+			for(unsigned int i = 0; i < img->width*img->height; ++i)
+			{
+				dataptr[i] = src[i] / 1000.0;
+			}
+
 
 			m_depth_pub.publish(img, m_depth_info);
 			break;
