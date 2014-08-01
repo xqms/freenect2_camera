@@ -28,12 +28,12 @@ private:
 
 	virtual bool onNewFrame(libfreenect2::Frame::Type type, libfreenect2::Frame* frame);
 
-	boost::shared_ptr<image_transport::ImageTransport> m_it;
-
+	boost::shared_ptr<image_transport::ImageTransport> m_color_it;
 	sensor_msgs::CameraInfoConstPtr m_color_info;
 	image_transport::CameraPublisher m_color_pub;
 	boost::shared_ptr<camera_info_manager::CameraInfoManager> m_color_infoMgr;
 
+	boost::shared_ptr<image_transport::ImageTransport> m_depth_it;
 	sensor_msgs::CameraInfoConstPtr m_depth_info;
 	image_transport::CameraPublisher m_depth_pub;
 	boost::shared_ptr<camera_info_manager::CameraInfoManager> m_depth_infoMgr;

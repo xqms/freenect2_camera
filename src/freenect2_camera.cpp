@@ -57,8 +57,6 @@ void Freenect2Camera::onInit()
 		m_device->getFirmwareVersion().c_str()
 	);
 
-	m_it.reset(new image_transport::ImageTransport(nh));
-
 	setupColor();
 	setupDepth();
 
@@ -68,6 +66,9 @@ void Freenect2Camera::onInit()
 void Freenect2Camera::setupColor()
 {
 	ros::NodeHandle& nh = getPrivateNodeHandle();
+	ros::NodeHandle color_nh(nh, "rgb");
+
+	m_color_it.reset(new image_transport::ImageTransport(color_nh));
 
 	// RGB setup
 	std::string color_info_url;
@@ -76,10 +77,10 @@ void Freenect2Camera::setupColor()
 	std::stringstream ss;
 	ss << m_device->getSerialNumber() << "_rgb";
 
-	m_color_pub = m_it->advertiseCamera("rgb", 1);
+	m_color_pub = m_color_it->advertiseCamera("image_raw", 1);
 	m_color_infoMgr.reset(
 		new camera_info_manager::CameraInfoManager(
-			getPrivateNodeHandle(), ss.str(), color_info_url
+			color_nh, ss.str(), color_info_url
 		)
 	);
 
@@ -134,6 +135,9 @@ void Freenect2Camera::setupColor()
 void Freenect2Camera::setupDepth()
 {
 	ros::NodeHandle& nh = getPrivateNodeHandle();
+	ros::NodeHandle depth_nh(nh, "depth");
+
+	m_depth_it.reset(new image_transport::ImageTransport(depth_nh));
 
 	std::string depth_info_url;
 	nh.param("depth_info_url", depth_info_url, std::string(""));
@@ -141,10 +145,10 @@ void Freenect2Camera::setupDepth()
 	std::stringstream ss;
 	ss << m_device->getSerialNumber() << "_depth";
 
-	m_depth_pub = m_it->advertiseCamera("depth", 1);
+	m_depth_pub = m_depth_it->advertiseCamera("image_raw", 1);
 	m_depth_infoMgr.reset(
 		new camera_info_manager::CameraInfoManager(
-			getPrivateNodeHandle(), ss.str(), depth_info_url
+			depth_nh, ss.str(), depth_info_url
 		)
 	);
 
@@ -223,7 +227,10 @@ bool Freenect2Camera::onNewFrame(libfreenect2::Frame::Type type, libfreenect2::F
 			img->data.resize(img->step * img->height);
 			memcpy(img->data.data(), frame->data, img->data.size());
 
-			m_color_pub.publish(img, m_color_info);
+			sensor_msgs::CameraInfoPtr info(new sensor_msgs::CameraInfo(*m_color_info));
+			info->header.stamp = img->header.stamp;
+
+			m_color_pub.publish(img, info);
 			break;
 		}
 		case libfreenect2::Frame::Depth:
@@ -250,8 +257,10 @@ bool Freenect2Camera::onNewFrame(libfreenect2::Frame::Type type, libfreenect2::F
 				dataptr[i] = src[i] / 1000.0;
 			}
 
+			sensor_msgs::CameraInfoPtr info(new sensor_msgs::CameraInfo(*m_depth_info));
+			info->header.stamp = img->header.stamp;
 
-			m_depth_pub.publish(img, m_depth_info);
+			m_depth_pub.publish(img, info);
 			break;
 		}
 	}
