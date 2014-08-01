@@ -1,0 +1,6 @@
+<library path="lib/libfreenect2_camera">
+	<class name="freenect2_camera" type="freenect2_camera::Freenect2Camera" base_class_type="nodelet::Nodelet">
+		<description>
+		</description>
+	</class>
+</library>
